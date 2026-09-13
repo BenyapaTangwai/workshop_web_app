@@ -1,6 +1,5 @@
 using TodoApi.Dtos;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -17,6 +16,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+var todosGroup = app.MapGroup("/api/todos").WithTags("Todos");
+
 var todos = new List<TodoGetDto>
 {
     new (1, "Learn C#", true),
@@ -24,9 +25,9 @@ var todos = new List<TodoGetDto>
     new (3, "Build a web API", false)
 };
 
-app.MapGet("/api/todos", () => Results.Ok(todos));
+todosGroup.MapGet("/", () => Results.Ok(todos));
 
-app.MapGet("/api/todos/{id}", (int id) =>
+todosGroup.MapGet("/{id}", (int id) =>
 {
     var todo = todos.FirstOrDefault(t => t.Id == id);
 
@@ -34,7 +35,7 @@ app.MapGet("/api/todos/{id}", (int id) =>
 
 });
 
-app.MapPost("/api/todos", (TodoPostDto dto) =>
+todosGroup.MapPost("/", (TodoPostDto dto) =>
 {
     var nextId = todos.Count == 0 ? 1 : todos.Max(t => t.Id) + 1;
 
@@ -44,7 +45,7 @@ app.MapPost("/api/todos", (TodoPostDto dto) =>
     return Results.Created($"/api/todos/{todo.Id}", todo);
 });
 
-app.MapPut("/api/todos/{id}", (int id, TodoPutDto dto) =>
+todosGroup.MapPut("/{id}", (int id, TodoPutDto dto) =>
 {
     try
     {
@@ -60,6 +61,26 @@ app.MapPut("/api/todos/{id}", (int id, TodoPutDto dto) =>
         return Results.Ok(todos[index]);
     }
 
+    catch (Exception ex)
+    {
+        return Results.Problem(ex.Message);
+    }
+});
+
+todosGroup.MapDelete("/{id}", (int id) =>
+{
+    try
+    {
+        var todo = todos.FirstOrDefault(t => t.Id == id);
+        if (todo is null) return Results.NotFound();
+
+        todos.Remove(todo);
+        return Results.NoContent();
+    }
+    catch (ArgumentNullException ex)
+    {
+        return Results.Problem("Parameter is null.{ex.Message}");
+    }
     catch (Exception ex)
     {
         return Results.Problem(ex.Message);
