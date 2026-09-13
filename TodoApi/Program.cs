@@ -1,6 +1,5 @@
 using TodoApi.Dtos;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -60,6 +59,26 @@ app.MapPut("/api/todos/{id}", (int id, TodoPutDto dto) =>
         return Results.Ok(todos[index]);
     }
 
+    catch (Exception ex)
+    {
+        return Results.Problem(ex.Message);
+    }
+});
+
+app.MapDelete("/api/todos/{id}", (int id) =>
+{
+    try
+    {
+        var todo = todos.FirstOrDefault(t => t.Id == id);
+        if (todo is null) return Results.NotFound();
+
+        todos.Remove(todo);
+        return Results.NoContent();
+    }
+    catch (ArgumentNullException ex)
+    {
+        return Results.Problem("Parameter is null.{ex.Message}");
+    }
     catch (Exception ex)
     {
         return Results.Problem(ex.Message);
