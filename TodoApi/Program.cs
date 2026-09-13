@@ -105,7 +105,14 @@ todosGroup.MapGet("/", async (AppDbContext db)=>
 {
     var todos = await db.Todos.ToListAsync();
 
-    return todos.Count == 0 ? Results.NotFound() : Results.Ok(todos);
+    var todoGetDtos = todos.Select(t =>
+                            new TodoGetDto(
+                                t.Id,
+                                t.Title,
+                                t.IsCompleted
+                            ));
+
+    return todos.Count == 0 ? Results.NotFound() : Results.Ok(todoGetDtos);
 });
 
 todosGroup.MapPost("/", async (AppDbContext db, TodoPostDto dto) =>
